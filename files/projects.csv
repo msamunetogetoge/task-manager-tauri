@@ -1,0 +1,4 @@
+id,title,description,order_date,due_date,completion_date,client_id,status,folder_path
+101,Web Design for Alpha,"Complete website redesign",2023-01-15,2023-03-01,,1,InProgress,/projects/alpha_web
+102,Illustration for Beta,"Character design and illustrations",2023-02-01,2023-04-15,,2,OnHold,/projects/beta_illustration
+103,Web Development for Gamma,"Develop new landing page",2023-02-20,2023-05-30,2023-05-15,3,Completed,/projects/gamma_dev

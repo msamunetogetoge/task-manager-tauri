@@ -13,6 +13,8 @@ function App() {
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     setGreetMsg(await invoke("greet", { name }));
+    let projects = await invoke("fetch_projects");
+    console.log("projects reading... ", projects);
   }
 
   return (
