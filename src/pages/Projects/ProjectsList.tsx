@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { invoke } from "@tauri-apps/api/tauri";
 
 import { TableCell, TableRow } from "@mui/material";
@@ -5,8 +7,12 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import { useEffect, useState } from "react";
-import { Project, ProjectStatus, TableData } from "./ProjectsList.type";
+
+import CircularProgress from "@mui/material/CircularProgress";
+
+import { Project, ProjectStatus, TableData } from "./Projects.type";
+
+import ProjectModal from "./ProjectModal";
 
 export default function ProjectLists() {
   const Columns = [
@@ -19,6 +25,7 @@ export default function ProjectLists() {
   ];
 
   const [tableData, setTableData] = useState<TableData[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     let projects = (await invoke("fetch_projects")) as Project[];
@@ -27,35 +34,52 @@ export default function ProjectLists() {
     setTableData(tableData);
   };
 
+  const saveNewProject = async (project: Project) => {
+    try {
+      setLoading(true);
+      await invoke("add_project", { newProject: project });
+      await fetchData();
+    } catch (e: any) {
+      alert("登録に失敗しました。");
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
   return (
-    <TableContainer>
-      <Table>
-        <TableHead>
-          <TableRow>
-            {Columns.map((col, index) => (
-              <TableCell key={index}>{col}</TableCell>
+    <>
+      {loading && <CircularProgress />}
+      <ProjectModal buttonTitle={"新規作成"} onSave={saveNewProject} />
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {Columns.map((col, index) => (
+                <TableCell key={index}>{col}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tableData.map((data, index) => (
+              <>
+                <TableRow key={index}>
+                  <TableCell key={0}>{data.OrderDate}</TableCell>
+                  <TableCell key={1}>{data.ProjectName}</TableCell>
+                  <TableCell key={2}>{data.Status}</TableCell>
+                  <TableCell key={3}>{data.CompanyName}</TableCell>
+                  <TableCell key={4}>{data.ContactName}</TableCell>
+                  <TableCell key={5}>{data.ProjectFolderPath}</TableCell>
+                </TableRow>
+              </>
             ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tableData.map((data, index) => (
-            <>
-              <TableRow key={index}>
-                <TableCell key={0}>{data.OrderDate}</TableCell>
-                <TableCell key={1}>{data.ProjectName}</TableCell>
-                <TableCell key={2}>{data.Status}</TableCell>
-                <TableCell key={3}>{data.CompanyName}</TableCell>
-                <TableCell key={4}>{data.ContactName}</TableCell>
-                <TableCell key={5}>{data.ProjectFolderPath}</TableCell>
-              </TableRow>
-            </>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
   );
 }
 

@@ -35,7 +35,7 @@ export enum ProjectStatus {
 /**
  * rustから受け取るClientデータ
  */
-type Client = {
+export type Client = {
   id: string;
   name: string;
   contact_person: string;

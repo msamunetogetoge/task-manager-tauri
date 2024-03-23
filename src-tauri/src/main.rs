@@ -89,6 +89,7 @@ fn ensure_csv_file_exists(path: &Path, headers: &[&str]) -> io::Result<()> {
     Ok(())
 }
 
+/// 初期化処理
 fn initialize_application() -> std::io::Result<()> {
     // プロジェクト管理フォルダの作成
     let project_manage_path = get_project_manage_path();

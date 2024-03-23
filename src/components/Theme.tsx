@@ -2,6 +2,30 @@ import { createTheme } from "@mui/material/styles";
 
 export const MyTheme = createTheme({
   components: {
+    MuiButton: {
+      styleOverrides: {
+        // containedバリアントのスタイル
+        contained: {
+          backgroundColor: "#0ABAB5", // 例: ボタンの背景色
+          color: "#FFFFFF", // 例: ボタンの文字色
+          "&:hover": {
+            backgroundColor: "#089A9A", // 例: ホバー時の背景色
+          },
+        },
+        // outlinedバリアントのスタイル
+        outlined: {
+          color: "#0ABAB5", // ボタンのテキストとボーダーの色
+          border: "1px solid #0ABAB5",
+          "&:hover": {
+            backgroundColor: "rgba(10, 186, 181, 0.2)", // ホバー時の背景色を薄く
+            borderColor: "#089A9A", // ホバー時には少し濃い色に変更
+            // 注意: backgroundColorの透明度を調整することで、望む効果を得られます。
+            // rgba(10, 186, 181, 0.04)は非常に薄い背景色です。必要に応じて調整してください。
+          },
+        },
+      },
+    },
+
     MuiTable: {
       styleOverrides: {
         // テーブル全体にボーダーを適用
