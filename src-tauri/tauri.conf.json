@@ -20,6 +20,19 @@
         "open": false,
         "save": false
       },
+      "fs":{
+        "all": false,
+        "copyFile": false,
+        "createDir": true,
+        "exists": true,
+        "readDir": false,
+        "readFile": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "scope": ["$APPDIR"],
+        "writeFile": true
+      },
       "shell": {
         "all": false,
         "open": true

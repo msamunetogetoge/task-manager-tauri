@@ -59,6 +59,19 @@ fn get_project_manage_path() -> PathBuf {
     exe_path
 }
 
+// アプリが作成するファイルのディレクトリのパス
+fn get_csv_file_directory_path() -> PathBuf {
+    // 現在の実行ファイルのパスを取得
+    let mut exe_path = env::current_exe().expect("Failed to get current exe path");
+    
+    // 実行ファイルがあるディレクトリに移動
+    exe_path.pop();
+    
+    exe_path.push("files/");
+    
+    exe_path
+}
+
 // ディレクトリが存在するか？
 fn ensure_directory_exists(path: &Path) -> std::io::Result<()> {
     if !path.exists() {
@@ -93,7 +106,11 @@ fn ensure_csv_file_exists(path: &Path, headers: &[&str]) -> io::Result<()> {
 fn initialize_application() -> std::io::Result<()> {
     // プロジェクト管理フォルダの作成
     let project_manage_path = get_project_manage_path();
+    let csv_file_directory_path = get_csv_file_directory_path();
     ensure_directory_exists(&project_manage_path)?;
+    ensure_directory_exists(&csv_file_directory_path)?;
+
+    // プロジェクトのファイルフォルダ作成
 
     // プロジェクトCSVファイルの作成
     let project_file_path = get_project_file_path();
@@ -148,7 +165,8 @@ fn add_project(mut new_project:Project , state: tauri::State<'_, AppState>) ->Re
      }
 
     // プロジェクトの新規登録
-    new_project.folder_path = project_path.to_str().expect("error in getting project path").to_string();
+    new_project.folder_path = project_path.to_string_lossy().to_string();
+
     if let Err(e) = state.project_repo.add(new_project) {
         // 失敗したら、ディレクトリも削除する
         for dir in directories.iter() {
