@@ -7,6 +7,7 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
+import Tooltip from "@mui/material/Tooltip";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -17,10 +18,11 @@ import ProjectModal from "./ProjectModal";
 export default function ProjectLists() {
   const Columns = [
     "受注日",
+    "締切日",
     "プロジェクト名",
+    "説明",
     "ステータス",
     "会社名",
-    "担当者名",
     "プロジェクトフォルダパス",
   ];
 
@@ -68,11 +70,17 @@ export default function ProjectLists() {
               <>
                 <TableRow key={index}>
                   <TableCell key={0}>{data.OrderDate}</TableCell>
-                  <TableCell key={1}>{data.ProjectName}</TableCell>
-                  <TableCell key={2}>{data.Status}</TableCell>
-                  <TableCell key={3}>{data.CompanyName}</TableCell>
-                  <TableCell key={4}>{data.ContactName}</TableCell>
-                  <TableCell key={5}>{data.ProjectFolderPath}</TableCell>
+                  <TableCell key={1}>{data.DueDate}</TableCell>
+                  <TableCell key={2}>{data.ProjectName}</TableCell>
+                  <TableCell key={3}>{data.Description}</TableCell>
+                  <TableCell key={4}>{data.Status}</TableCell>
+                  <Tooltip
+                    placement="right"
+                    title={data.CompanyName + " " + data.ContactName + " "}
+                  >
+                    <TableCell key={5}>{data.CompanyName}</TableCell>
+                  </Tooltip>
+                  <TableCell key={6}>{data.ProjectFolderPath}</TableCell>
                 </TableRow>
               </>
             ))}
@@ -101,7 +109,9 @@ function projectStatusToString(status: ProjectStatus): string {
 export function convertProjectsToTableData(projects: Project[]): TableData[] {
   return projects.map((project) => ({
     OrderDate: project.order_date,
+    DueDate: project.due_date,
     ProjectName: project.title,
+    Description: project.description,
     Status: projectStatusToString(project.status),
     CompanyName: project.client.name,
     ContactName: project.client.contact_person,
