@@ -26,12 +26,6 @@ interface ProjectModalProps {
   onSave: (project: Project) => void;
 }
 
-const testClient: Client = {
-  contact_person: "Alice",
-  id: "1",
-  name: "Alpha Inc.",
-};
-
 const NewClient: Client = {
   id: "",
   name: "",
@@ -45,7 +39,7 @@ const NewProject: Project = {
   order_date: "",
   due_date: "",
   completion_date: "",
-  client: testClient,
+  client: NewClient,
   status: ProjectStatus.OnHold,
   folder_path: "",
 };
@@ -132,11 +126,15 @@ export default function ProjectModal(prop: ProjectModalProps) {
 
   const handleClientChange = (e: any) => {
     const clientId = e.target.value;
-    const selectedClient = clients.find((client) => (client.id = clientId))!;
-    setProject((prevProject) => ({
-      ...prevProject,
-      client: selectedClient,
-    }));
+    const selectedClient = clients.find((client) => client.id === clientId);
+    if (selectedClient) {
+      setProject((prevProject) => ({
+        ...prevProject,
+        client: selectedClient,
+      }));
+    } else {
+      console.error("Selected client not found with id:", clientId);
+    }
   };
 
   return (
@@ -204,23 +202,25 @@ export default function ProjectModal(prop: ProjectModalProps) {
               margin={"normal"}
             >
               <Box flexGrow={1} marginRight={1}>
-                <FormControl fullWidth>
-                  <InputLabel id="client-select-label">Client</InputLabel>
-                  <Select
-                    disabled={createNewClient}
-                    labelId="client-select-label"
-                    value={project.client.id}
-                    label="Client"
-                    onChange={handleClientChange}
-                    name="client_id"
-                  >
-                    {clients.map((client, index) => (
-                      <MenuItem key={index} value={client.id}>
-                        {client.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {clients.length > 0 && (
+                  <FormControl fullWidth>
+                    <InputLabel id="client-select-label">Client</InputLabel>
+                    <Select
+                      disabled={createNewClient}
+                      labelId="client-select-label"
+                      value={project.client.id}
+                      label="Client"
+                      onChange={handleClientChange}
+                      name="client_id"
+                    >
+                      {clients.map((client, index) => (
+                        <MenuItem key={index} value={client.id}>
+                          {client.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
               </Box>
               <Button
                 variant="outlined"
