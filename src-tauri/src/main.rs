@@ -144,9 +144,11 @@ fn fetch_clients(state: tauri::State<'_, AppState>) ->Result<Vec<Client>, String
 #[tauri::command]
 fn add_project(mut new_project:Project , state: tauri::State<'_, AppState>) ->Result<(),String>{
 
+
     // プロジェクトに付随するClientが新しければ、新規作成
     if let Ok(None) =state.client_repo.get(&new_project.client.id)  {
-        state.client_repo.add(new_project.client.clone()).map_err(|e| e.to_string())?;
+        let new_client_id= state.client_repo.add(new_project.client.clone()).map_err(|e| e.to_string())?;
+        new_project.client.id=new_client_id;
     }
     // 新規プロジェクトのIDを生成
     let new_id = state.project_repo.new_project_id().map_err(|e| e.to_string())?;
@@ -183,7 +185,7 @@ fn add_project(mut new_project:Project , state: tauri::State<'_, AppState>) ->Re
 fn main() {
     if let Err(e) = initialize_application() {
         println!("Failed to initialize application: {}", e);
-        return;
+        panic!("Failed to initialize application: {}", e);
     }
 
     let project_file_path_buf = get_project_file_path();

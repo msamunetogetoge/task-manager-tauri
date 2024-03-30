@@ -3,6 +3,7 @@ use crate::models::project::{Project, ProjectStatus};
 use csv;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use std::fmt::Debug;
 use std::fs::File;
 
 use std::fs::OpenOptions;
@@ -65,7 +66,7 @@ impl Repository<Client> for ClientFileRepository {
         }
         Ok(None)
     }
-    fn add(&self, mut new_client: Client) -> Result<(), String>{
+    fn add(&self, mut new_client: Client) -> Result<String, String>{
         // 新しいプロジェクトIDの生成
         let new_id = self.new_client_id()?;
         new_client.id = new_id.to_string();
@@ -89,7 +90,7 @@ impl Repository<Client> for ClientFileRepository {
         wtr.serialize(new_client).map_err(|err| err.to_string())?;
         wtr.flush().map_err(|err| err.to_string())?;
 
-        Ok(())
+        Ok(new_id.to_string())
     }
     }
 
@@ -160,7 +161,7 @@ impl ProjectFileRepository {
 }
 
 impl Repository<Project> for ProjectFileRepository {
-    fn add(&self, mut new_project: Project) -> Result<(),String>{
+    fn add(&self, mut new_project: Project) -> Result<String,String>{
 
         // 新しいプロジェクトIDの生成
         let new_id = self.new_project_id()?;
@@ -182,7 +183,7 @@ impl Repository<Project> for ProjectFileRepository {
         };
         wtr.serialize(new_project_csv).map_err(|err| err.to_string())?;
         wtr.flush().map_err(|err| err.to_string())?;
-        Ok(())
+        Ok(new_id.to_string())
     }
 
     fn get(&self, id: &str) -> Result<Option<Project>, String> {

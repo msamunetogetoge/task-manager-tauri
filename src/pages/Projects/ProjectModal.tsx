@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { Client, Project, ProjectStatus } from "./Projects.type";
 import LocalizedDatePicker from "../../components/LocalizedDatePicker";
 import Calendar from "../../components/Calendar";
+import { invoke } from "@tauri-apps/api";
 
 type ButtonTitle = "新規作成" | "更新";
 
@@ -72,7 +73,14 @@ export default function ProjectModal(prop: ProjectModalProps) {
   const [createNewClient, setCreateNewClient] = useState(false);
   const [project, setProject] = useState<Project>(updateProject ?? NewProject);
 
+  const fetchClienet = async () => {
+    let fetchedClient = (await invoke("fetch_clients")) as Client[];
+
+    setClients(fetchedClient);
+  };
+
   useEffect(() => {
+    fetchClienet();
     if (prop.buttonTitle === "新規作成") setProject(NewProject);
   }, []);
 
@@ -96,15 +104,18 @@ export default function ProjectModal(prop: ProjectModalProps) {
   };
 
   const handleSubmit = () => {
+    onSave(project);
+    handleClose();
+  };
+
+  useEffect(() => {
     if (createNewClient) {
       setProject((prevProject) => ({
         ...prevProject,
         client: newClient,
       }));
     }
-    onSave(project);
-    handleClose();
-  };
+  }, [createNewClient, newClient]);
 
   const changeOrderDate = (newDate: Date | null) => {
     const orderDate = newDate ?? new Date();
