@@ -94,7 +94,7 @@ export default function ClientsListModal() {
   return (
     <>
       <Button variant="outlined" onClick={handleOpen}>
-        {"client"}
+        {"クライアント"}
       </Button>
       <Dialog
         open={open}

@@ -11,6 +11,8 @@ import Tooltip from "@mui/material/Tooltip";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
+import { Box } from "@mui/material";
+
 import { Client, Project, ProjectStatus, TableData } from "./Projects.type";
 
 import ProjectModal from "./ProjectModal";
@@ -68,8 +70,11 @@ export default function ProjectLists() {
   return (
     <>
       {loading && <CircularProgress />}
-      <ProjectModal buttonTitle={"新規作成"} onSave={saveNewProject} />
-      <ClientsListModal />
+      <Box display={"flex"} flexDirection={"row"} marginBottom={"1rem"}>
+        <ProjectModal buttonTitle={"新規作成"} onSave={saveNewProject} />
+        <ClientsListModal />
+      </Box>
+
       <TableContainer>
         <Table>
           <TableHead>
