@@ -30,6 +30,12 @@ const testClient: Client = {
   name: "Alpha Inc.",
 };
 
+const NewClient: Client = {
+  id: "",
+  name: "",
+  contact_person: "",
+};
+
 // todo:fetchして取得できるようにする
 const testClients: Client[] = [
   {
@@ -50,6 +56,8 @@ export default function ProjectModal(prop: ProjectModalProps) {
 
   const [open, setOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>(testClients);
+  const [newClient, setNewClient] = useState<Client>(NewClient);
+  const [createNewClient, setCreateNewClient] = useState(false);
   const [project, setProject] = useState<Project>(
     updateProject ?? {
       id: "",
@@ -75,7 +83,21 @@ export default function ProjectModal(prop: ProjectModalProps) {
     }));
   };
 
+  const handleNewClientChange = (e: any) => {
+    const { name, value } = e.target;
+    setNewClient((client) => ({
+      ...client,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = () => {
+    if (createNewClient) {
+      setProject((prevProject) => ({
+        ...prevProject,
+        client: newClient,
+      }));
+    }
     onSave(project);
     handleClose();
   };
@@ -151,21 +173,13 @@ export default function ProjectModal(prop: ProjectModalProps) {
               value={project.description}
               onChange={handleChange}
             />
-            <Box
-              sx={{
-                height: "1rem",
-              }}
-            />
+            <YAxisSpacer />
             <LocalizedDatePicker
               label={"受注日"}
               value={project.order_date}
               onChange={changeOrderDate}
             />
-            <Box
-              sx={{
-                height: "1rem",
-              }}
-            />
+            <YAxisSpacer />
             <LocalizedDatePicker
               label={"締切日"}
               value={project.due_date}
@@ -173,11 +187,7 @@ export default function ProjectModal(prop: ProjectModalProps) {
             />
             {buttonTitle === "更新" && (
               <>
-                <Box
-                  sx={{
-                    height: "1rem",
-                  }}
-                />
+                <YAxisSpacer />
                 <LocalizedDatePicker
                   label={"完了日"}
                   value={project.completion_date}
@@ -185,23 +195,61 @@ export default function ProjectModal(prop: ProjectModalProps) {
                 />
               </>
             )}
-
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="client-select-label">Client</InputLabel>
-              <Select
-                labelId="client-select-label"
-                value={project.client.id}
-                label="Client"
-                onChange={handleClientChange}
-                name="client_id"
+            <YAxisSpacer />
+            <Box
+              display={"flex"}
+              alignItems={"center"}
+              width="100%"
+              margin={"normal"}
+            >
+              <Box flexGrow={1} marginRight={1}>
+                <FormControl fullWidth>
+                  <InputLabel id="client-select-label">Client</InputLabel>
+                  <Select
+                    disabled={createNewClient}
+                    labelId="client-select-label"
+                    value={project.client.id}
+                    label="Client"
+                    onChange={handleClientChange}
+                    name="client_id"
+                  >
+                    {clients.map((client, index) => (
+                      <MenuItem key={index} value={client.id}>
+                        {client.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setCreateNewClient(!createNewClient);
+                }}
               >
-                {clients.map((client, index) => (
-                  <MenuItem key={index} value={client.id}>
-                    {client.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                {createNewClient ? "select client" : "create client"}
+              </Button>
+            </Box>
+
+            {createNewClient && (
+              <>
+                <YAxisSpacer />
+                <TextField
+                  label="Client Name"
+                  name="name"
+                  value={newClient.name}
+                  onChange={handleNewClientChange}
+                ></TextField>
+                <YAxisSpacer />
+                <TextField
+                  name="contact_person"
+                  label="Contact Person Name"
+                  value={newClient.contact_person}
+                  onChange={handleNewClientChange}
+                ></TextField>
+              </>
+            )}
+
             <FormControl fullWidth margin="normal">
               <InputLabel id="status-select-label">Status</InputLabel>
               <Select
@@ -233,3 +281,13 @@ export default function ProjectModal(prop: ProjectModalProps) {
     </>
   );
 }
+
+const YAxisSpacer = () => {
+  return (
+    <Box
+      sx={{
+        height: "1rem",
+      }}
+    />
+  );
+};
