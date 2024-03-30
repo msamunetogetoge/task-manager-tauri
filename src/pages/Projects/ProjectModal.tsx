@@ -16,6 +16,7 @@ import { Client, Project, ProjectStatus } from "./Projects.type";
 import LocalizedDatePicker from "../../components/LocalizedDatePicker";
 import Calendar from "../../components/Calendar";
 import { invoke } from "@tauri-apps/api";
+import { YAxisSpacer } from "../../components/Spacer";
 
 type ButtonTitle = "新規作成" | "更新";
 
@@ -281,13 +282,3 @@ export default function ProjectModal(prop: ProjectModalProps) {
     </>
   );
 }
-
-const YAxisSpacer = () => {
-  return (
-    <Box
-      sx={{
-        height: "1rem",
-      }}
-    />
-  );
-};

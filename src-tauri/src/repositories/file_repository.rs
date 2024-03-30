@@ -9,6 +9,8 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::path::Path;
 
+use tempfile::{tempfile, NamedTempFile};
+
 use super::repository_trait::Repository;
 
 pub struct ClientFileRepository {
@@ -52,7 +54,7 @@ impl ClientFileRepository {
         Ok(clients)
     }
 
-    
+
 }
 
 
@@ -92,6 +94,38 @@ impl Repository<Client> for ClientFileRepository {
 
         Ok(new_id.to_string())
     }
+    fn update(&self,  updated_client:Client) ->Result<(),String>{
+        // 一時ファイルを作成します。
+        let mut temp_file = NamedTempFile::new().expect("tempfiles作成失敗");
+
+        {
+            // 元のファイルを開きます。
+            let file = File::open(&self.file_path).map_err(|e| e.to_string())?;
+            let mut rdr = csv::Reader::from_reader(file);
+            let mut wtr = csv::Writer::from_writer(&mut temp_file);
+
+            // CSVリーダーを使用して、クライアントを1つずつ処理します。
+            for result in rdr.deserialize() {
+                let mut client: Client = result.map_err(|e| e.to_string())?;
+                
+                // 見つけたクライアントが更新すべきものであれば、更新します。
+                if client.id == updated_client.id {
+                    client = updated_client.clone();
+                }
+
+                // 一時ファイルに書き込みます。
+                wtr.serialize(&client).map_err(|e| e.to_string())?;
+            }
+            // 一時ファイルを元のファイル名にリネームする前に、元のファイルを閉じることを確認します。
+            drop(wtr);
+            drop(rdr);
+        }
+        // 元のファイルと一時ファイルを入れ替えます。
+        std::fs::rename(temp_file.path(), &self.file_path).map_err(|e| e.to_string())?;
+        
+        Ok(())
+}
+
     }
 
 
@@ -194,6 +228,10 @@ impl Repository<Project> for ProjectFileRepository {
             }
         }
         Ok(None)
+    }
+
+    fn update(&self, project:Project) ->Result<(),String>{
+        return Err("まだ実装してないよ".to_string());
     }
 }
 

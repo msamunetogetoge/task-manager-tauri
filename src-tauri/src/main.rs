@@ -8,7 +8,7 @@ use std::path::Path;
 use std::{fs, path::PathBuf};
 use std::{env, io};
 
-use models::client::Client;
+use models::client::{Client};
 use models::project::Project;
 use repositories::{file_repository::{ClientFileRepository, ProjectFileRepository}, repository_trait::Repository};
 
@@ -125,10 +125,6 @@ fn initialize_application() -> std::io::Result<()> {
 
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[tauri::command]
 fn fetch_projects(state: tauri::State<'_, AppState>) ->Result<Vec<Project>, String>{
@@ -182,6 +178,22 @@ fn add_project(mut new_project:Project , state: tauri::State<'_, AppState>) ->Re
     Ok(())
 }
 
+#[tauri::command]
+fn update_project(project:Project, state: tauri::State<'_, AppState>) ->Result<(),String>{
+    if let Err(e) = state.project_repo.update(project){
+        return  Err(e.to_string());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn update_client(client:Client , state: tauri::State<'_, AppState>) ->Result<(),String>{
+    if let Err(e) = state.client_repo.update(client){
+        return  Err(e.to_string());
+    }
+    Ok(())
+}
+
 fn main() {
     if let Err(e) = initialize_application() {
         println!("Failed to initialize application: {}", e);
@@ -204,7 +216,7 @@ fn main() {
     // test_reading_csv();
     tauri::Builder::default()
         .manage(app_state)  // AppStateをTauriアプリケーションに登録
-        .invoke_handler(tauri::generate_handler![greet, fetch_projects, fetch_clients, add_project])
+        .invoke_handler(tauri::generate_handler![fetch_projects, fetch_clients, add_project,update_project, update_client])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

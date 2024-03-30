@@ -14,6 +14,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { Project, ProjectStatus, TableData } from "./Projects.type";
 
 import ProjectModal from "./ProjectModal";
+import ClientsListModal from "../Clients/ClientsListModal";
 
 export default function ProjectLists() {
   const Columns = [
@@ -31,7 +32,6 @@ export default function ProjectLists() {
 
   const fetchData = async () => {
     let projects = (await invoke("fetch_projects")) as Project[];
-    console.log("fetch projects...", projects);
     let tableData = convertProjectsToTableData(projects);
     setTableData(tableData);
   };
@@ -56,6 +56,7 @@ export default function ProjectLists() {
     <>
       {loading && <CircularProgress />}
       <ProjectModal buttonTitle={"新規作成"} onSave={saveNewProject} />
+      <ClientsListModal />
       <TableContainer>
         <Table>
           <TableHead>
