@@ -49,26 +49,11 @@ const NewProject: Project = {
   folder_path: "",
 };
 
-// todo:fetchして取得できるようにする
-const testClients: Client[] = [
-  {
-    contact_person: "Alice",
-    id: "1",
-    name: "Alpha Inc.",
-  },
-  { contact_person: "Bob", id: "2", name: "Beta LLC" },
-  {
-    contact_person: "Carol",
-    id: "3",
-    name: "Gamma Corp",
-  },
-];
-
 export default function ProjectModal(prop: ProjectModalProps) {
   const { buttonTitle, updateProject, onSave } = prop;
 
   const [open, setOpen] = useState(false);
-  const [clients, setClients] = useState<Client[]>(testClients);
+  const [clients, setClients] = useState<Client[]>([]);
   const [newClient, setNewClient] = useState<Client>(NewClient);
   const [createNewClient, setCreateNewClient] = useState(false);
   const [project, setProject] = useState<Project>(updateProject ?? NewProject);
