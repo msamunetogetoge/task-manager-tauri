@@ -1,9 +1,11 @@
 export type TableData = {
+  Id: string;
   OrderDate: string;
   DueDate: string;
   ProjectName: string;
   Description: string;
   Status: string;
+  ClientId: string;
   CompanyName: string;
   ContactName: string;
   ProjectFolderPath: string;

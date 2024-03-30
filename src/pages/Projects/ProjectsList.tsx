@@ -11,7 +11,7 @@ import Tooltip from "@mui/material/Tooltip";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { Project, ProjectStatus, TableData } from "./Projects.type";
+import { Client, Project, ProjectStatus, TableData } from "./Projects.type";
 
 import ProjectModal from "./ProjectModal";
 import ClientsListModal from "../Clients/ClientsListModal";
@@ -49,6 +49,19 @@ export default function ProjectLists() {
     }
   };
 
+  const updateProject = async (project: Project) => {
+    try {
+      setLoading(true);
+      await invoke("update_project", { project: project });
+      await fetchData();
+    } catch (e: any) {
+      alert("登録に失敗しました。");
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -64,6 +77,7 @@ export default function ProjectLists() {
               {Columns.map((col, index) => (
                 <TableCell key={index}>{col}</TableCell>
               ))}
+              <TableCell>操作</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -82,6 +96,13 @@ export default function ProjectLists() {
                     <TableCell key={5}>{data.CompanyName}</TableCell>
                   </Tooltip>
                   <TableCell key={6}>{data.ProjectFolderPath}</TableCell>
+                  <TableCell key={7}>
+                    <ProjectModal
+                      buttonTitle={"更新"}
+                      onSave={updateProject}
+                      updateProject={convertTableDataToProject(data)}
+                    />
+                  </TableCell>
                 </TableRow>
               </>
             ))}
@@ -106,16 +127,60 @@ function projectStatusToString(status: ProjectStatus): string {
   }
 }
 
+// 文字列を ProjectStatus enumに変換するヘルパー関数
+function stringToProjectStatus(statusString: string): ProjectStatus {
+  switch (statusString) {
+    case "進行中":
+      return ProjectStatus.InProgress;
+    case "完了":
+      return ProjectStatus.Completed;
+    case "待機中":
+      return ProjectStatus.OnHold;
+    default:
+      console.error(new Error(`Unknown ProjectStatus string: ${statusString}`));
+      return ProjectStatus.OnHold;
+  }
+}
+
 // この関数は、Rustから送られてくるProjectの配列をTableData型の配列に変換します。
 export function convertProjectsToTableData(projects: Project[]): TableData[] {
   return projects.map((project) => ({
+    Id: project.id,
     OrderDate: project.order_date,
     DueDate: project.due_date,
     ProjectName: project.title,
     Description: project.description,
     Status: projectStatusToString(project.status),
+    ClientId: project.client.id,
     CompanyName: project.client.name,
     ContactName: project.client.contact_person,
     ProjectFolderPath: project.folder_path,
   }));
+}
+
+function convertTableDataToProject(tableData: TableData): Project {
+  // Clientオブジェクトの構築
+  const client: Client = {
+    id: tableData.ClientId,
+    name: tableData.CompanyName,
+    contact_person: tableData.ContactName,
+  };
+
+  // ProjectStatusの変換（この部分はアプリのロジックによって調整する必要があります）
+  const status: ProjectStatus = stringToProjectStatus(tableData.Status);
+
+  // Projectオブジェクトの構築
+  const project: Project = {
+    id: tableData.Id,
+    title: tableData.ProjectName,
+    description: tableData.Description,
+    order_date: tableData.OrderDate,
+    due_date: tableData.DueDate,
+    // completion_dateはオプショナルなので、存在する場合のみ設定
+    completion_date: tableData.DueDate,
+    client: client,
+    status: status,
+    folder_path: tableData.ProjectFolderPath,
+  };
+  return project;
 }

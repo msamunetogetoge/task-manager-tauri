@@ -164,7 +164,7 @@ impl ProjectFileRepository {
         for result in rdr.deserialize() {
             let project_csv: Result<ProjectCSV, csv::Error> = result;
             let project_csv = project_csv.map_err(|e| e.to_string())?;
-            let id = project_csv.id.parse::<i32>().map_err(|e| e.to_string())?;
+            let id = project_csv.id.parse::<i32>().unwrap_or(0);
             if id > max_id {
                 max_id = id;
             }
@@ -230,8 +230,37 @@ impl Repository<Project> for ProjectFileRepository {
         Ok(None)
     }
 
-    fn update(&self, project:Project) ->Result<(),String>{
-        return Err("まだ実装してないよ".to_string());
+    fn update(&self, updated_project:Project) ->Result<(),String>{
+        // 一時ファイルを作成します。
+        let mut temp_file = NamedTempFile::new().expect("tempfiles作成失敗");
+
+        let updated_project_csv = convert_project_to_csv(updated_project);
+        {
+            // 元のファイルを開きます。
+            let file = File::open(&self.project_file_path).map_err(|e| e.to_string())?;
+            let mut rdr = csv::Reader::from_reader(file);
+            let mut wtr = csv::Writer::from_writer(&mut temp_file);
+
+            // CSVリーダーを使用して、クライアントを1つずつ処理します。
+            for result in rdr.deserialize() {
+                let mut project: ProjectCSV = result.map_err(|e| e.to_string())?;
+                
+                // 見つけたクライアントが更新すべきものであれば、更新します。
+                if project.id == updated_project_csv.id {
+                project = updated_project_csv.clone();
+                }
+
+                // 一時ファイルに書き込みます。
+                wtr.serialize(&project).map_err(|e| e.to_string())?;
+            }
+            // 一時ファイルを元のファイル名にリネームする前に、元のファイルを閉じることを確認します。
+            drop(wtr);
+            drop(rdr);
+        }
+        // 元のファイルと一時ファイルを入れ替えます。
+        std::fs::rename(temp_file.path(), &self.project_file_path).map_err(|e| e.to_string())?;
+        
+        Ok(())
     }
 }
 

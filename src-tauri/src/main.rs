@@ -179,8 +179,14 @@ fn add_project(mut new_project:Project , state: tauri::State<'_, AppState>) ->Re
 }
 
 #[tauri::command]
-fn update_project(project:Project, state: tauri::State<'_, AppState>) ->Result<(),String>{
+fn update_project(mut project:Project, state: tauri::State<'_, AppState>) ->Result<(),String>{
+     // プロジェクトに付随するClientが新しければ、新規作成
+     if let Ok(None) =state.client_repo.get(&project.client.id)  {
+        let new_client_id= state.client_repo.add(project.client.clone()).map_err(|e| e.to_string())?;
+        project.client.id=new_client_id;
+    }
     if let Err(e) = state.project_repo.update(project){
+        println!("{:?}", e.to_string());
         return  Err(e.to_string());
     }
     Ok(())
@@ -195,6 +201,7 @@ fn update_client(client:Client , state: tauri::State<'_, AppState>) ->Result<(),
 }
 
 fn main() {
+   
     if let Err(e) = initialize_application() {
         println!("Failed to initialize application: {}", e);
         panic!("Failed to initialize application: {}", e);
