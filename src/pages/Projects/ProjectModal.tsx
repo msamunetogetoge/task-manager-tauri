@@ -11,7 +11,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import DialogTitle from "@mui/material/DialogTitle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Client, Project, ProjectStatus } from "./Projects.type";
 import LocalizedDatePicker from "../../components/LocalizedDatePicker";
 import Calendar from "../../components/Calendar";
@@ -36,6 +36,18 @@ const NewClient: Client = {
   contact_person: "",
 };
 
+const NewProject: Project = {
+  id: "",
+  title: "",
+  description: "",
+  order_date: "",
+  due_date: "",
+  completion_date: "",
+  client: testClient,
+  status: ProjectStatus.OnHold,
+  folder_path: "",
+};
+
 // todo:fetchして取得できるようにする
 const testClients: Client[] = [
   {
@@ -58,19 +70,11 @@ export default function ProjectModal(prop: ProjectModalProps) {
   const [clients, setClients] = useState<Client[]>(testClients);
   const [newClient, setNewClient] = useState<Client>(NewClient);
   const [createNewClient, setCreateNewClient] = useState(false);
-  const [project, setProject] = useState<Project>(
-    updateProject ?? {
-      id: "",
-      title: "",
-      description: "",
-      order_date: "",
-      due_date: "",
-      completion_date: "",
-      client: testClient,
-      status: ProjectStatus.OnHold,
-      folder_path: "",
-    }
-  );
+  const [project, setProject] = useState<Project>(updateProject ?? NewProject);
+
+  useEffect(() => {
+    if (prop.buttonTitle === "新規作成") setProject(NewProject);
+  }, []);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
