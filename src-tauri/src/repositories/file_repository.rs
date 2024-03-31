@@ -4,17 +4,161 @@ use csv;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::Debug;
-use std::fs::File;
+use std::fs::{self, File};
 
 use std::fs::OpenOptions;
-use std::path::Path;
+use std::io;
+use std::path::{Path, PathBuf};
 
-use tempfile::{tempfile, NamedTempFile};
+use tempfile::NamedTempFile;
 
 use super::repository_trait::Repository;
 
+trait FileRepository {
+    fn get_file_path(&self) -> &Path;
+    /// 初期化処理
+    fn initialize_file_repository() -> std::io::Result<(String,String)> {
+        // プロジェクト管理フォルダの作成
+        let project_manage_path = Self::get_project_manage_path();
+        let csv_file_directory_path = Self::get_csv_file_directory_path();
+        Self::ensure_directory_exists(&project_manage_path)?;
+        Self::ensure_directory_exists(&csv_file_directory_path)?;
+
+        // プロジェクトのファイルフォルダ作成
+
+        // プロジェクトCSVファイルの作成
+        let project_file_path_buf = Self::get_project_file_path();
+        Self::ensure_csv_file_exists(&project_file_path_buf, &["id","title","description","order_date","due_date","completion_date","client_id","status","folder_path"])?;
+
+        // クライアントCSVファイルの作成
+        let client_file_path_buf = Self::get_client_file_path();
+        Self::ensure_csv_file_exists(&client_file_path_buf, &["id","name","contact_person"])?;
+
+        let project_file_path = project_file_path_buf.to_str().expect("can not get project file path").to_string();
+        let client_file_path = client_file_path_buf.to_str().expect("can not get client file path").to_string();
+
+        Ok((project_file_path,client_file_path) )
+    }
+
+    // projectの情報を格納するファイルのパス
+    fn get_project_file_path() -> PathBuf {
+        // 現在の実行ファイルのパスを取得
+        let mut exe_path = std::env::current_exe().expect("Failed to get current exe path");
+        
+        // 実行ファイルがあるディレクトリに移動
+        exe_path.pop();
+        
+        // "files/projects.csv" へのパスを追加
+        exe_path.push("files/projects.csv");
+        
+        exe_path
+    }
+
+    // clientの情報を格納するファイルのパス
+    fn get_client_file_path() -> PathBuf {
+        // 現在の実行ファイルのパスを取得
+        let mut exe_path = std::env::current_exe().expect("Failed to get current exe path");
+        
+        // 実行ファイルがあるディレクトリに移動
+        exe_path.pop();
+        
+        // "files/clients.csv" へのパスを追加
+        exe_path.push("files/clients.csv");
+        
+        exe_path
+    }
+
+    // アプリが作成するプロジェクトのファイルのパス
+    fn get_project_manage_path() -> PathBuf {
+        // 現在の実行ファイルのパスを取得
+        let mut exe_path = std::env::current_exe().expect("Failed to get current exe path");
+        
+        // 実行ファイルがあるディレクトリに移動
+        exe_path.pop();
+        
+        exe_path.push("project/");
+        
+        exe_path
+    }
+
+    // アプリが作成するファイルのディレクトリのパス
+    fn get_csv_file_directory_path() -> PathBuf {
+        // 現在の実行ファイルのパスを取得
+        let mut exe_path = std::env::current_exe().expect("Failed to get current exe path");
+        
+        // 実行ファイルがあるディレクトリに移動
+        exe_path.pop();
+        
+        exe_path.push("files/");
+        
+        exe_path
+    }
+
+    // project用のディレクトリ作成
+    fn create_project_directories(&self, new_id:&str)-> Result<PathBuf, String> {
+        let base_path = Self::get_project_manage_path(); // 適切なパス取得関数を使用してください
+        let project_path = base_path.join(new_id);
+        let directories = vec!["documents", "deliverables", "works"];
+
+        for dir in &directories {
+            let dir_path = project_path.join(dir);
+            fs::create_dir_all(&dir_path).map_err(|e| format!("Failed to create directory '{}': {}", dir_path.display(), e))?;
+        }
+
+        Ok(project_path)
+    }
+
+    // project用のディレクトリ削除
+    fn delete_project_directories(&self,project_path:PathBuf) ->Result<(),String>{
+        let directories = vec!["documents", "deliverables", "works"];
+        for dir in directories.iter() {
+            let dir_path = project_path.join(dir);
+            fs::remove_dir_all(&dir_path)
+                .map_err(|e| format!("Failed to remove directory '{}': {}", dir_path.display(), e))?;
+        }
+        Ok(())
+    }
+
+    // ディレクトリが存在するか？
+    fn ensure_directory_exists(path: &Path) -> std::io::Result<()> {
+        if !path.exists() {
+            std::fs::create_dir_all(path)?;
+        }
+        Ok(())
+    }
+
+    // csvファイルが作成するかチェック。なければ作成。
+    fn ensure_csv_file_exists(path: &Path, headers: &[&str]) -> io::Result<()> {
+        let file_exists = path.exists();
+        
+        if file_exists {
+            // ファイルが存在する場合、ヘッダーの確認（オプション）
+            let mut rdr = csv::ReaderBuilder::new().has_headers(true).from_path(path)?;
+            let rdr_headers = rdr.headers()?;
+            if rdr_headers != headers {
+                return Err(io::Error::new(io::ErrorKind::Other, "CSV header mismatch"));
+            }
+        } else {
+            // ファイルが存在しない場合、新規作成
+            let mut wtr = csv::WriterBuilder::new().from_path(path)?;
+            wtr.write_record(headers)?;
+            wtr.flush()?;
+        }
+
+        Ok(())
+    }
+    // 他の共通のメソッドもここに追加
+}
+
+
 pub struct ClientFileRepository {
     file_path: String,
+}
+
+impl FileRepository for ClientFileRepository{
+    fn get_file_path(&self) -> &Path {
+        Path::new(&self.file_path)
+    }
 }
 
 impl ClientFileRepository {
@@ -148,16 +292,29 @@ pub struct ProjectFileRepository {
     client_file_path: String,
 }
 
+impl FileRepository for ProjectFileRepository{
+    fn get_file_path(&self) -> &Path {
+        Path::new(&self.project_file_path)
+    }
+}
+
 impl ProjectFileRepository {
-    pub fn new(project_file_path: &str, client_file_path:&str) -> Self {
+    pub fn new() -> Self {
+
+        let (project_file_path,client_file_path ) = Self::initialize_file_repository().expect("Failed to initialize file repository");        
         Self {
-            project_file_path: project_file_path.to_string(),
-            client_file_path:client_file_path.to_string()
+            project_file_path: project_file_path,
+            client_file_path:client_file_path
         }
     }
 
+    /// Returns the get self client file path of this [`ProjectFileRepository`].
+    pub fn get_self_client_file_path(&self)->String{
+        self.client_file_path.to_string()
+    }
+
     pub fn new_project_id(&self) -> Result<i32, String> {
-        let file = File::open(&self.project_file_path).map_err(|e| e.to_string())?;
+        let file = File::open(self.get_file_path()).map_err(|e| e.to_string())?;
         let mut rdr = csv::Reader::from_reader(file);
         let mut max_id = 0;
     
@@ -174,11 +331,11 @@ impl ProjectFileRepository {
     }
 
     pub fn fetch(&self) -> Result<Vec<Project>, Box<dyn Error>> {
-        let file = File::open(&self.project_file_path)?;
+        let file = File::open(self.get_file_path())?;
         let mut rdr = csv::Reader::from_reader(file);
         let mut projects = Vec::new();
 
-        let clients_repostiroy = ClientFileRepository::new(&self.client_file_path);
+        let clients_repostiroy = ClientFileRepository::new(&self.get_self_client_file_path());
 
 
         for result in rdr.deserialize() {
@@ -191,7 +348,6 @@ impl ProjectFileRepository {
         Ok(projects)
     }
 
-    
 }
 
 impl Repository<Project> for ProjectFileRepository {
@@ -200,6 +356,17 @@ impl Repository<Project> for ProjectFileRepository {
         // 新しいプロジェクトIDの生成
         let new_id = self.new_project_id()?;
         new_project.id = new_id.to_string();
+
+        let client_repository = ClientFileRepository::new(&self.client_file_path);
+
+        if let Ok(None) =client_repository.get(&new_project.client.id)  {
+            let new_client_id= client_repository.add(new_project.client.clone()).map_err(|e| e.to_string())?;
+            new_project.client.id=new_client_id;
+        }
+
+        // プロジェクトディレクトリの作成
+        let project_path = self.create_project_directories(&new_id.to_string())?;
+
 
         let file_path = Path::new(&self.project_file_path);
         let file_exists = file_path.exists();
@@ -215,8 +382,8 @@ impl Repository<Project> for ProjectFileRepository {
             // ファイルが新規作成された場合、ヘッダーを書き込むようにWriterを生成
             csv::WriterBuilder::new().has_headers(true).from_writer(file)
         };
-        wtr.serialize(new_project_csv).map_err(|err| err.to_string())?;
-        wtr.flush().map_err(|err| err.to_string())?;
+        if let Err(_) = wtr.serialize(new_project_csv){self.delete_project_directories(project_path.clone())?};
+        if let Err(_) = wtr.flush().map_err(|err| err.to_string()){self.delete_project_directories( project_path.clone())?};
         Ok(new_id.to_string())
     }
 
@@ -264,6 +431,7 @@ impl Repository<Project> for ProjectFileRepository {
     }
 }
 
+
 fn convert_csv_to_project(csv: ProjectCSV, client: Client) -> Project {
     Project {
         id: csv.id,
@@ -291,3 +459,5 @@ fn convert_project_to_csv(project:Project) -> ProjectCSV{
         folder_path: project.folder_path.clone(),
     }
 }
+
+
