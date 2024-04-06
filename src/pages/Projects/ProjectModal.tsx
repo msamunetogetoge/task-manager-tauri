@@ -139,7 +139,7 @@ export default function ProjectModal(prop: ProjectModalProps) {
 
   return (
     <>
-      <Button variant="outlined" onClick={handleOpen}>
+      <Button variant="contained" onClick={handleOpen}>
         {buttonTitle}
       </Button>
       <Dialog
