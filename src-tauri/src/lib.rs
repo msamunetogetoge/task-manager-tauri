@@ -1,2 +1,3 @@
-mod models;
+mod domain;
 mod repositories;
+mod application;

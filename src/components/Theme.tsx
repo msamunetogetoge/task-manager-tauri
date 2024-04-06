@@ -41,7 +41,7 @@ export const MyTheme = createTheme({
         root: {
           // MuiTableRowがホバーされた時のスタイル
           "tr:hover": {
-            backgroundColor: "#3DEDE8", // ホバー時に適用したい背景色
+            backgroundColor: "#9EF6F3", // ホバー時に適用したい背景色
           },
         },
       },

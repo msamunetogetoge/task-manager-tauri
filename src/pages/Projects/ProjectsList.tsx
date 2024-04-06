@@ -34,6 +34,7 @@ export default function ProjectLists() {
 
   const fetchData = async () => {
     let projects = (await invoke("fetch_projects")) as Project[];
+    console.log(projects);
     let tableData = convertProjectsToTableData(projects);
     setTableData(tableData);
   };

@@ -1,5 +1,5 @@
 // models/order.rs
-use crate::models::client::Client;
+use crate::domain::models::client::Client;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -13,7 +13,7 @@ pub struct Project {
     pub completion_date: Option<String>,
     pub client: Client,
     pub status: ProjectStatus,
-    pub folder_path:String, // todo:pathをパースするライブラリなど選定
+    pub folder_path_suffix:Option<String>, 
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

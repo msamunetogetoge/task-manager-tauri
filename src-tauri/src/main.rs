@@ -1,13 +1,15 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod models;
+mod domain;
 mod repositories;
+mod application;
 
 use std::env;
 
-use models::client::Client;
-use models::project::Project;
+use application::{interface::ProjectFrontEnd, usecase::convert_project_to_frontend};
+use domain::models::client::Client;
+use domain::models::project::Project;
 use repositories::{file_repository::{ClientFileRepository, ProjectFileRepository}, repository_trait::Repository};
 
 
@@ -19,8 +21,11 @@ struct AppState{
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 #[tauri::command]
-fn fetch_projects(state: tauri::State<'_, AppState>) ->Result<Vec<Project>, String>{
-    state.project_repo.fetch().map_err(|e| e.to_string())
+fn fetch_projects(state: tauri::State<'_, AppState>) ->Result<Vec<ProjectFrontEnd>, String>{
+    let projects = state.project_repo.fetch().map_err(|e| e.to_string())?;
+    let project_frontends = projects.into_iter().map(convert_project_to_frontend).collect::<Vec<ProjectFrontEnd>>();
+
+    Ok(project_frontends)
 }
 
 #[tauri::command]
