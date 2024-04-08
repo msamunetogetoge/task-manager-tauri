@@ -250,6 +250,16 @@ export default function ProjectModal(prop: ProjectModalProps) {
                 ></TextField>
               </>
             )}
+            <YAxisSpacer />
+            <TextField
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              name="folder_path_suffix"
+              label="フォルダ名"
+              value={project.folder_path_suffix}
+              onChange={handleChange}
+            />
 
             <FormControl fullWidth margin="normal">
               <InputLabel id="status-select-label">Status</InputLabel>

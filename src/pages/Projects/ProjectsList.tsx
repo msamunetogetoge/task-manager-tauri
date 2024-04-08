@@ -45,7 +45,7 @@ export default function ProjectLists() {
       await invoke("add_project", { newProject: project });
       await fetchData();
     } catch (e: any) {
-      alert("登録に失敗しました。");
+      alert("登録に失敗しました。" + e);
       console.error(e);
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ export default function ProjectLists() {
       await invoke("update_project", { project: project });
       await fetchData();
     } catch (e: any) {
-      alert("登録に失敗しました。");
+      alert("登録に失敗しました。" + e);
       console.error(e);
     } finally {
       setLoading(false);
@@ -160,11 +160,12 @@ export function convertProjectsToTableData(projects: Project[]): TableData[] {
     ClientId: project.client.id,
     CompanyName: project.client.name,
     ContactName: project.client.contact_person,
-    ProjectFolderPath: project.folder_path,
+    ProjectFolderPath: project.folder_path ?? "",
   }));
 }
 
 function convertTableDataToProject(tableData: TableData): Project {
+  console.log(tableData);
   // Clientオブジェクトの構築
   const client: Client = {
     id: tableData.ClientId,
@@ -187,6 +188,9 @@ function convertTableDataToProject(tableData: TableData): Project {
     client: client,
     status: status,
     folder_path: tableData.ProjectFolderPath,
+    folder_path_suffix: tableData.ProjectFolderPath
+      ? [...tableData.ProjectFolderPath.split("/")].pop()
+      : undefined,
   };
   return project;
 }

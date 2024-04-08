@@ -181,7 +181,7 @@ impl Repository<Client> for ClientFileRepository {
         Ok(None)
     }
     fn add(&self, mut new_client: Client) -> Result<String, String>{
-        // 新しいプロジェクトIDの生成
+        // 新しいクライアントIDの生成
         let new_id = self.new_client_id()?;
         new_client.id = new_id.to_string();
 
@@ -336,6 +336,11 @@ impl Repository<Project> for ProjectFileRepository {
         // プロジェクトディレクトリの作成
         let project_folder_suffix = get_folder_path_suffix(&new_project);
         let project_path = get_project_directory_path(&project_folder_suffix);
+        
+        if project_path.exists(){
+            return Err("既に存在するプロジェクト名です。".to_string())
+        }
+        
         let _ = create_project_directories(project_path.clone())?;
 
 
@@ -372,7 +377,15 @@ impl Repository<Project> for ProjectFileRepository {
     fn update(&self, mut updated_project:Project) ->Result<(),String>{
         // 一時ファイルを作成します。
         let mut temp_file = NamedTempFile::new().expect("tempfiles作成失敗");
-        let new_suffix =get_folder_path_suffix(&updated_project);
+        let new_suffix = get_folder_path_suffix(&updated_project);
+
+        let new_folder_path = get_project_directory_path(&new_suffix);
+        if let Ok(Some(old_project)) = self.get(&updated_project.id){
+            if get_folder_path_suffix(&old_project ) != new_suffix &&  new_folder_path.exists() {
+                return Err("既に存在するプロジェクト名です。".to_string())
+            }
+        }
+       
 
         let client_repository = ClientFileRepository::new(&self.client_file_path);
         // 指定されたクライアントが新規の時はクライアントのcsvに追記する。

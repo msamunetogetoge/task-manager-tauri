@@ -24,7 +24,8 @@ export type Project = {
   completion_date?: string; // Option<String> in Rust is equivalent to an optional field in TypeScript
   client: Client;
   status: ProjectStatus;
-  folder_path: string; // todo: Select a library for parsing paths
+  folder_path?: string; // todo: Select a library for parsing paths
+  folder_path_suffix?: string;
 };
 
 /**
